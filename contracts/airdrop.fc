@@ -57,12 +57,32 @@ global int query_id;
     .end_cell(), 1);
 }
 
+() send_tokens(slice recipient, int amount, int query_id) impure {
+    send_raw_message(begin_cell()
+        .store_uint(0x10, 6)
+        .store_slice(jetton_wallet)
+        .store_coins(50000000)
+        .store_uint(1, 107)
+        .store_ref(begin_cell()
+            .store_uint(0x0f8a7ea5, 32)
+            .store_uint(query_id, 64)
+            .store_coins(amount)
+            .store_slice(recipient)
+            .store_slice(my_address())
+            .store_uint(0, 1)
+            .store_coins(0)
+            .store_uint(0, 1)
+        .end_cell())
+    .end_cell(), 1);
+}
+
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
     slice cs = in_msg_full.begin_parse();
     int flags = cs~load_uint(4);
     if ((flags & 1) | (in_msg_body.slice_empty?())) {
         return ();
     }
+    slice sender = cs~load_msg_addr();
 
     int op = in_msg_body~load_uint(32);
 
@@ -80,5 +100,17 @@ global int query_id;
         slice entry = get_data_from_merkle_tree(tree.begin_parse());
 
         claim(entry);
+    }
+
+    elseif (op == op::process_claim) {
+        query_id = in_msg_body~load_uint(64);
+        slice entry = in_msg_body;
+        slice claimer = in_msg_body~load_msg_addr();
+        int amount = in_msg_body~load_coins();
+        load_data();
+
+        throw_unless(703, equal_slices(sender, helper_address(helper_stateinit(entry))));
+
+        send_tokens(claimer, amount, query_id);
     }
 }
