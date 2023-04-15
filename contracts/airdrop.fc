@@ -1,5 +1,84 @@
 #include "imports/stdlib.fc";
+#include "imports/opcodes.fc";
+
+(slice, int) begin_parse_exotic(cell c) asm "x{D739} s,";
+
+global slice jetton_wallet;
+global int merkle_root;
+global cell helper_code;
+global int query_id;
+
+() load_data() impure inline {
+    slice ds = get_data().begin_parse();
+    (jetton_wallet, merkle_root, helper_code) = (ds~load_msg_addr(), ds~load_uint(256), ds~load_ref());
+}
+
+(slice) get_data_from_merkle_tree(slice ts) {
+    if (ts.slice_refs_empty?()) {
+        return ts;
+    }
+    repeat (ts.slice_refs()) {
+        cell c = ts~load_ref();
+        (slice cs, int exotic?) = c.begin_parse_exotic();
+        if (~ exotic?) {
+            return get_data_from_merkle_tree(cs);
+        }
+    }
+    return null();
+}
+
+(cell) helper_stateinit(slice entry) {
+    return begin_cell()
+        .store_uint(6, 5)
+        .store_ref(helper_code)
+        .store_ref(begin_cell()
+            .store_uint(0, 1)
+            .store_slice(my_address())
+            .store_slice(entry)
+        .end_cell())
+    .end_cell();
+}
+
+(slice) helper_address(cell stateinit) {
+    return begin_cell()
+        .store_uint(0x400, 11)
+        .store_uint(cell_hash(stateinit), 256)
+    .end_cell().begin_parse();
+}
+
+() claim(slice entry) impure {
+    cell stateinit = helper_stateinit(entry);
+    send_raw_message(begin_cell()
+        .store_uint(0x10, 6)
+        .store_slice(helper_address(stateinit))
+        .store_coins(50000000)
+        .store_uint(6, 108)
+        .store_ref(stateinit)
+    .end_cell(), 1);
+}
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if ((flags & 1) | (in_msg_body.slice_empty?())) {
+        return ();
+    }
 
+    int op = in_msg_body~load_uint(32);
+
+    if (op == op::claim) {
+        query_id = in_msg_body~load_uint(64);
+        cell proof_cell = in_msg_body~load_ref();
+        load_data();
+
+        (slice cs, int exotic?) = proof_cell.begin_parse_exotic();
+        throw_unless(42, exotic?);
+        throw_unless(43, cs~load_uint(8) == 3);
+        throw_unless(44, merkle_root == cs~load_uint(256)); 
+        
+        cell tree = cs~load_ref();
+        slice entry = get_data_from_merkle_tree(tree.begin_parse());
+
+        claim(entry);
+    }
 }
