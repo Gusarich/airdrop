@@ -32,3 +32,9 @@ Since we don't want to dynamically change the tree during the contract process a
 Upon deployment, the `AirdropHelper` contract checks if the deployer is the main `Airdrop` contract and sends a message indicating success back. For all future calls, this contract will throw an error because it has been deployed previously. Such a contract doesn't require a lot of coins on its balance to stay alive for a long time. **0.05 TON** would be enough for many years, which is more than sufficient.
 
 The main advantage of using separate contracts here is that the claiming fees are the same for all users, regardless of the number of users who have already claimed tokens.
+
+## Possible improvements
+
+With the simple and generic logic of this system, we can easily modify it to work not only with Jetton airdrops but also with arbitrary messages. The smart contract can be used to send arbitrary messages on its behalf upon requests from external sources while ensuring that each message will be sent only once.
+
+For example, this system could be adapted not only for airdrops of Jettons that follow the TEP-74 standard but also for NFTs or any other possible future standards and modifications of tokens.
