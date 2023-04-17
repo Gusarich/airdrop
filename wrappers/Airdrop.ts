@@ -1,9 +1,17 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from 'ton-core';
 
-export type AirdropConfig = {};
+export type AirdropConfig = {
+    jettonWallet: Address;
+    merkleRoot: bigint;
+    helperCode: Cell;
+};
 
 export function airdropConfigToCell(config: AirdropConfig): Cell {
-    return beginCell().endCell();
+    return beginCell()
+        .storeAddress(config.jettonWallet)
+        .storeUint(config.merkleRoot, 256)
+        .storeRef(config.helperCode)
+        .endCell();
 }
 
 export class Airdrop implements Contract {
@@ -24,6 +32,14 @@ export class Airdrop implements Contract {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().endCell(),
+        });
+    }
+
+    async sendClaim(provider: ContractProvider, via: Sender, value: bigint, merkleProof: Cell) {
+        await provider.internal(via, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell().storeUint(0x65d88d5f, 32).storeUint(0, 64).storeRef(merkleProof).endCell(),
         });
     }
 }
