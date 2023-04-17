@@ -27,7 +27,7 @@ Each record can look like this:
 
 To claim the airdrop, the user only needs to provide the Merkle proof of their entry.
 
-Since we don't want to dynamically change the tree during the contract process and don't want to add unpredictable and large fees for users, we need another way to protect against repeated claims. Let's add another contract to the system - `AirdropHelper`. Its only job is to act as a boolean variable that shows whether the user has already claimed tokens or not. This contract will store the recipient and main `Airdrop` contract addresses in its data so that each user has a separate contract with deterministic address that can be calculated within the main contract.
+Since we don't want to dynamically change the tree during the contract process and don't want to add unpredictable and large fees for users, we need another way to protect against repeated claims. Distributed architecture of TON allows us to easily add another contract to the system - `AirdropHelper`. Its only job is to act as a boolean variable that shows whether the user has already claimed tokens or not. This contract will store the recipient and main `Airdrop` contract addresses in its data so that each user has a separate contract with deterministic address that can be calculated within the main contract.
 
 Upon deployment, the `AirdropHelper` contract checks if the deployer is the main `Airdrop` contract and sends a message indicating success back. For all future calls, this contract will throw an error because it has been deployed previously. Such a contract doesn't require a lot of coins on its balance to stay alive for a long time. **0.05 TON** would be enough for many years, which is more than sufficient.
 
