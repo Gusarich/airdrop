@@ -9,7 +9,7 @@ This repository contains an implementation of a Scalable Airdrop System for the 
 We can classify old airdrop systems into three groups based on their mechanism:
 
 -   Distribution of all tokens at once: The distributor pays all the fees. This is simple and fast, making it a good approach for small airdrops (<1000 recipients). However, it requires you to pay the fees for distributing all the tokens. For large airdrops, you'll end up spending thousands of dollars just for fees.
--   Storing all recipients in contract storage and distributing tokens individually to each user: Users pay fees for claiming tokens. This approach requires users to send a claiming message to receive their tokens. This method was used for distributing $Uniswap tokens, for example. You don't spend a lot of money on fees with this approach, but the smart contract stores tens of thousands of entries in an on-chain dictionary, which is also very costly and inefficient.
+-   Storing all recipients in contract storage and distributing tokens individually to each user: Users pay fees for claiming tokens. This approach requires users to send a claiming message to receive their tokens. You don't spend a lot of money on fees with this approach, but the smart contract stores tens of thousands of entries in an on-chain dictionary, which is also very costly and inefficient.
 -   Storing airdrop entries in a Merkle tree: The smart contract stores the root hash of the tree and a list of addresses that have already claimed the airdrop. This approach eliminates the need to pay high fees during deployment but can still be costly for users on a large scale.
     This approach removes the need of paying a lot of fees on the deployment, but can still be costy for users on a large scale.
 
