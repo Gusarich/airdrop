@@ -21,7 +21,7 @@ We will store the list of airdrop entries in a Merkle tree, which allows us to q
 Each record can look like this:
 
 ```
-#_ address:MsgAddressInt amount:Coins = AirdropEntry;
+_ address:MsgAddressInt amount:Coins = AirdropEntry;
 ```
 
 To claim the airdrop, the user only needs to provide the Merkle proof of their entry.
