@@ -1,6 +1,6 @@
-import { toNano } from 'ton-core';
+import { toNano } from '@ton/core';
 import { Airdrop } from '../wrappers/Airdrop';
-import { compile, NetworkProvider } from '@ton-community/blueprint';
+import { compile, NetworkProvider } from '@ton/blueprint';
 
 export async function run(provider: NetworkProvider) {
     const airdrop = provider.open(Airdrop.createFromConfig({}, await compile('Airdrop')));

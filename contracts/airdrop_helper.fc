@@ -1,5 +1,5 @@
 #include "imports/stdlib.fc";
-#include "imports/opcodes.fc";
+#include "constants.fc";
 
 global int claimed;
 global slice airdrop;
