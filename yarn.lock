@@ -3078,10 +3078,16 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-ton-core@>=0.47.1, ton-core@^0.49.0:
+ton-core@>=0.47.1:
   version "0.49.0"
   resolved "https://registry.yarnpkg.com/ton-core/-/ton-core-0.49.0.tgz#69d338daa72e33b36aea4fb02cb0c7b3bf2c668b"
   integrity sha512-t3fhs9rb7JfOccSU966bLSHq5G4PYippaXpQJGZPvUwoNVdlM3/nUwz6S6cr/hsGbthRBzApl4FhJsDlx9r4vA==
+  dependencies:
+    symbol.inspect "1.0.1"
+
+"ton-core@github:Gusarich/ton-core-1":
+  version "0.49.1"
+  resolved "https://codeload.github.com/Gusarich/ton-core-1/tar.gz/42b9c8f51bdff1ced6185579a613331ffe851f4c"
   dependencies:
     symbol.inspect "1.0.1"
 

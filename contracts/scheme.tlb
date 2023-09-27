@@ -3,5 +3,5 @@
 
 #_ address:MsgAddressInt amount:Coins = AirdropEntry;
 
-claim#65d88d5f query_id:uint64 proof:^(MerkleProof AirdropEntry) = InternalMsgBody;
-process_claim#7b503f1e query_id:uint64 entry:AirdropEntry = InternalMsgBody;
+claim#42ab5b97 query_id:uint64 proof:^(MerkleProof AirdropEntry) = InternalMsgBody;
+process_claim#b190b42 query_id:uint64 entry:AirdropEntry = InternalMsgBody;

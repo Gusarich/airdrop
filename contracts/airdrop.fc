@@ -1,36 +1,27 @@
 #include "imports/stdlib.fc";
-#include "imports/opcodes.fc";
+#include "constants.fc";
 
-(slice, int) begin_parse_exotic(cell c) asm "x{D739} s,";
+(slice, int) begin_parse_exotic (cell c) asm "XCTOS";
 
-global slice jetton_wallet;
-global int merkle_root;
-global cell helper_code;
-global int query_id;
+global slice data::jetton_wallet;
+global int data::merkle_root;
+global cell data::helper_code;
 
-() load_data() impure inline {
+global int context::op;
+global slice context::sender;
+global int context::query_id;
+
+() load_data () impure inline {
     slice ds = get_data().begin_parse();
-    (jetton_wallet, merkle_root, helper_code) = (ds~load_msg_addr(), ds~load_uint(256), ds~load_ref());
+    data::jetton_wallet = ds~load_msg_addr();
+    data::merkle_root = ds~load_uint(256);
+    data::helper_code = ds~load_ref();
 }
 
-(slice) get_data_from_merkle_tree(slice ts) {
-    if (ts.slice_refs_empty?()) {
-        return ts;
-    }
-    repeat (ts.slice_refs()) {
-        cell c = ts~load_ref();
-        (slice cs, int exotic?) = c.begin_parse_exotic();
-        if (~ exotic?) {
-            return get_data_from_merkle_tree(cs);
-        }
-    }
-    return null();
-}
-
-(cell) helper_stateinit(slice entry) {
+(cell) helper_stateinit (slice entry) {
     return begin_cell()
         .store_uint(6, 5)
-        .store_ref(helper_code)
+        .store_ref(data::helper_code)
         .store_ref(begin_cell()
             .store_uint(0, 1)
             .store_slice(my_address())
@@ -39,14 +30,14 @@ global int query_id;
     .end_cell();
 }
 
-(slice) helper_address(cell stateinit) {
+(slice) helper_address (cell stateinit) {
     return begin_cell()
         .store_uint(0x400, 11)
         .store_uint(cell_hash(stateinit), 256)
     .end_cell().begin_parse();
 }
 
-() claim(slice entry) impure {
+() claim (slice entry) impure {
     cell stateinit = helper_stateinit(entry);
     send_raw_message(begin_cell()
         .store_uint(0x10, 6)
@@ -57,10 +48,10 @@ global int query_id;
     .end_cell(), 1);
 }
 
-() send_tokens(slice recipient, int amount, int query_id) impure {
+() send_tokens (slice recipient, int amount, int query_id) impure {
     send_raw_message(begin_cell()
         .store_uint(0x10, 6)
-        .store_slice(jetton_wallet)
+        .store_slice(data::jetton_wallet)
         .store_coins(50000000)
         .store_uint(1, 107)
         .store_ref(begin_cell()
@@ -76,41 +67,46 @@ global int query_id;
     .end_cell(), 1);
 }
 
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-    slice cs = in_msg_full.begin_parse();
-    int flags = cs~load_uint(4);
-    if ((flags & 1) | (in_msg_body.slice_empty?())) {
+() recv_internal (int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_bits() < 96) {
         return ();
     }
-    slice sender = cs~load_msg_addr();
 
-    int op = in_msg_body~load_uint(32);
+    context::op = in_msg_body~load_uint(32);
+    context::query_id = in_msg_body~load_uint(64);
+    (_, context::sender) = in_msg_full.begin_parse().skip_bits(4).load_msg_addr();
 
-    if (op == op::claim) {
-        query_id = in_msg_body~load_uint(64);
+    load_data();
+
+    if (context::op == op::claim) {
         cell proof_cell = in_msg_body~load_ref();
-        load_data();
+        slice entry = in_msg_body;
 
         (slice cs, int exotic?) = proof_cell.begin_parse_exotic();
         throw_unless(42, exotic?);
         throw_unless(43, cs~load_uint(8) == 3);
-        throw_unless(44, merkle_root == cs~load_uint(256)); 
-        
-        cell tree = cs~load_ref();
-        slice entry = get_data_from_merkle_tree(tree.begin_parse());
+        throw_unless(44, data::merkle_root == cs~load_uint(256)); 
+        throw_unless(45, equal_slices(entry, cs));
 
         claim(entry);
     }
 
-    elseif (op == op::process_claim) {
-        query_id = in_msg_body~load_uint(64);
+    elseif (context::op == op::process_claim) {
         slice entry = in_msg_body;
         slice claimer = in_msg_body~load_msg_addr();
         int amount = in_msg_body~load_coins();
-        load_data();
 
-        throw_unless(703, equal_slices(sender, helper_address(helper_stateinit(entry))));
+        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry))));
 
-        send_tokens(claimer, amount, query_id);
+        send_tokens(claimer, amount, context::query_id);
     }
+
+    else {
+        throw(0xffff);
+    }
+}
+
+(slice, int, cell) get_contract_data() method_id {
+    load_data();
+    return (data::jetton_wallet, data::merkle_root, data::helper_code);
 }

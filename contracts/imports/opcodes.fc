@@ -1,2 +1,0 @@
-const int op::claim = 0x65d88d5f;
-const int op::process_claim = 0x7b503f1e;
