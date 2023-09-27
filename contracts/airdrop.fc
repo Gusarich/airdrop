@@ -40,17 +40,17 @@ global int context::query_id;
 () claim (slice entry) impure {
     cell stateinit = helper_stateinit(entry);
     send_raw_message(begin_cell()
-        .store_uint(0x10, 6)
+        .store_uint(0x18, 6)
         .store_slice(helper_address(stateinit))
-        .store_coins(50000000)
+        .store_coins(0)
         .store_uint(6, 108)
         .store_ref(stateinit)
-    .end_cell(), 1);
+    .end_cell(), 64);
 }
 
 () send_tokens (slice recipient, int amount, int query_id) impure {
     send_raw_message(begin_cell()
-        .store_uint(0x10, 6)
+        .store_uint(0x18, 6)
         .store_slice(data::jetton_wallet)
         .store_coins(50000000)
         .store_uint(1, 107)
@@ -79,6 +79,8 @@ global int context::query_id;
     load_data();
 
     if (context::op == op::claim) {
+        throw_unless(error::not_enough_coins, msg_value >= 100000000);
+        
         cell proof_cell = in_msg_body~load_ref();
         slice entry = in_msg_body;
 

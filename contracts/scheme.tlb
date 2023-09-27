@@ -1,7 +1,9 @@
-#_ jetton_wallet:MsgAddressInt merkle_root:uint256 helper_code:^Cell = AirdropStorage;
-#_ claimed:Bool airdrop:MsgAddressInt entry:AirdropEntry = AirdropHelperStorage;
+_ jetton_wallet:MsgAddressInt merkle_root:uint256 helper_code:^Cell = AirdropStorage;
 
-#_ address:MsgAddressInt amount:Coins = AirdropEntry;
+not_claimed$0 airdrop:MsgAddressInt entry:AirdropEntry = AirdropHelperStorage;
+claimed$1 = AirdropHelperStorage;
+
+_ address:MsgAddressInt amount:Coins = AirdropEntry;
 
 claim#42ab5b97 query_id:uint64 proof:^(MerkleProof AirdropEntry) = InternalMsgBody;
 process_claim#b190b42 query_id:uint64 entry:AirdropEntry = InternalMsgBody;
