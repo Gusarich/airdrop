@@ -26,18 +26,20 @@ global slice data::entry;
     }
 
     load_data();
-    throw_if(702, data::claimed);
+    throw_if(error::already_claimed, data::claimed);
     set_claimed();
 
     int query_id = in_msg_body~load_uint(64);
+
+    raw_reserve(const::min_balance, 0);
     
     send_raw_message(begin_cell()
         .store_uint(0x10, 6)
         .store_slice(data::airdrop)
-        .store_coins(50000000)
+        .store_coins(0)
         .store_uint(0, 107)
         .store_uint(op::process_claim, 32)
         .store_uint(query_id, 64)
         .store_slice(data::entry)
-    .end_cell(), 1);
+    .end_cell(), 128);
 }
