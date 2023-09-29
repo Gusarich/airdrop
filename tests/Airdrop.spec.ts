@@ -186,4 +186,18 @@ describe('Airdrop', () => {
             ).toEqual(dictionary.get(1n)?.amount);
         }
     });
+
+    it('should not claim with wrong index', async () => {
+        const merkleProof = dictionary.generateMerkleProof(2n);
+        const result = await airdrop.sendClaim(users[1].getSender(), toNano('0.15'), 1n, merkleProof);
+        expect(result.transactions).toHaveTransaction({
+            on: airdrop.address,
+            exitCode: 9,
+        });
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address)))
+                .getJettonBalance()
+        ).toEqual(0n);
+    });
 });
