@@ -8,6 +8,8 @@ import {
     ContractProvider,
     Sender,
     SendMode,
+    Builder,
+    Slice,
 } from '@ton/core';
 
 export type AirdropConfig = {
@@ -31,18 +33,20 @@ export type AirdropEntry = {
     amount: bigint;
 };
 
+export const airdropEntryValue = {
+    serialize: (src: AirdropEntry, buidler: Builder) => {
+        buidler.storeAddress(src.address).storeCoins(src.amount);
+    },
+    parse: (src: Slice) => {
+        return {
+            address: src.loadAddress(),
+            amount: src.loadCoins(),
+        };
+    },
+};
+
 export function generateEntriesDictionary(entries: AirdropEntry[]): Dictionary<bigint, AirdropEntry> {
-    let dict: Dictionary<bigint, AirdropEntry> = Dictionary.empty(Dictionary.Keys.BigUint(256), {
-        serialize: (src, buidler) => {
-            buidler.storeAddress(src.address).storeCoins(src.amount);
-        },
-        parse: (src) => {
-            return {
-                address: src.loadAddress(),
-                amount: src.loadCoins(),
-            };
-        },
-    });
+    let dict: Dictionary<bigint, AirdropEntry> = Dictionary.empty(Dictionary.Keys.BigUint(256), airdropEntryValue);
 
     for (let i = 0; i < entries.length; i++) {
         dict.set(BigInt(i), entries[i]);
