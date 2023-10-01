@@ -6,14 +6,14 @@ This repository contains an implementation of a Scalable Airdrop System for the 
 
 ## Table of contents
 
-1. [Technical description](#technical-description)
-   1.1 [Motivation](#motivation)
-   1.2 [Solution](#solution)
-   1.3 [Possible improvements](#possible-improvements)
-2. [Documentation](#documentation)
-   2.1 [Preparing the list of entries](#preparing-the-list-of-entries)
-   2.2 [Deploying the Airdrop](#deploying-the-airdrop)
-   2.3 [Claiming the Airdrop](#claiming-the-airdrop)
+-   [Technical description](#technical-description)
+    -   [Motivation](#motivation)
+    -   [Solution](#solution)
+    -   [Possible improvements](#possible-improvements)
+-   [Documentation](#documentation)
+    -   [Preparing the list of entries](#preparing-the-list-of-entries)
+    -   [Deploying the Airdrop](#deploying-the-airdrop)
+    -   [Claiming the Airdrop](#claiming-the-airdrop)
 
 ## Technical description
 
