@@ -1,6 +1,6 @@
 import { Blockchain, SandboxContract, TreasuryContract, printTransactionFees } from '@ton/sandbox';
 import { Cell, Dictionary, beginCell, toNano } from '@ton/core';
-import { Airdrop, AirdropEntry } from '../wrappers/Airdrop';
+import { Airdrop, AirdropEntry, generateEntriesDictionary } from '../wrappers/Airdrop';
 import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
 import { JettonMinter } from '../wrappers/JettonMinter';
@@ -31,24 +31,14 @@ describe('Airdrop', () => {
 
         users = await blockchain.createWallets(1000);
 
-        dictionary = Dictionary.empty(Dictionary.Keys.BigUint(256), {
-            serialize: (src, buidler) => {
-                buidler.storeAddress(src.address).storeCoins(src.amount);
-            },
-            parse: (src) => {
-                return {
-                    address: src.loadAddress(),
-                    amount: src.loadCoins(),
-                };
-            },
-        });
-
-        for (let i = 0n; i < 1000; i++) {
-            dictionary.set(i, {
+        let entires: AirdropEntry[] = [];
+        for (let i = 0; i < 1000; i++) {
+            entires.push({
                 address: users[parseInt(i.toString())].address,
                 amount: BigInt(Math.floor(Math.random() * 1e9)),
             });
         }
+        dictionary = generateEntriesDictionary(entires);
 
         dictCell = beginCell().storeDictDirect(dictionary).endCell();
 

@@ -1,4 +1,14 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
+import {
+    Dictionary,
+    Address,
+    beginCell,
+    Cell,
+    Contract,
+    contractAddress,
+    ContractProvider,
+    Sender,
+    SendMode,
+} from '@ton/core';
 
 export type AirdropConfig = {
     jettonMinter: Address;
@@ -20,6 +30,26 @@ export type AirdropEntry = {
     address: Address;
     amount: bigint;
 };
+
+export function generateEntriesDictionary(entries: AirdropEntry[]): Dictionary<bigint, AirdropEntry> {
+    let dict: Dictionary<bigint, AirdropEntry> = Dictionary.empty(Dictionary.Keys.BigUint(256), {
+        serialize: (src, buidler) => {
+            buidler.storeAddress(src.address).storeCoins(src.amount);
+        },
+        parse: (src) => {
+            return {
+                address: src.loadAddress(),
+                amount: src.loadCoins(),
+            };
+        },
+    });
+
+    for (let i = 0; i < entries.length; i++) {
+        dict.set(BigInt(i), entries[i]);
+    }
+
+    return dict;
+}
 
 export class Airdrop implements Contract {
     constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) {}
