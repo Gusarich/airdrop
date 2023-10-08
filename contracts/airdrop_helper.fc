@@ -26,6 +26,7 @@ global slice data::entry;
     }
 
     load_data();
+    throw_unless(error::wrong_sender, equal_slices(cs~load_msg_addr(), data::airdrop));
     throw_if(error::already_claimed, data::claimed);
     set_claimed();
 
