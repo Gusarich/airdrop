@@ -2,7 +2,8 @@
     "name": "airdrop",
     "license": "MIT",
     "scripts": {
-        "test": "jest"
+        "test": "jest",
+        "build": "blueprint build --all && tsc --build"
     },
     "devDependencies": {
         "@ton/blueprint": "^0.12.1",

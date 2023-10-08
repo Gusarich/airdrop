@@ -23,13 +23,14 @@ export async function run(provider: NetworkProvider) {
     const dictCell = beginCell().storeDictDirect(dict).endCell();
     const merkleRoot = BigInt('0x' + dictCell.hash().toString('hex'));
 
+    const jettonMinterAddress = Address.parse('EQAqPr4f-D4ke-BEJ-WxQ1Yn9FP6h9n0Hft3AbUcLofNn7j2');
+    const jettonMinter = provider.open(JettonMinter.createFromAddress(jettonMinterAddress));
+
     const airdrop = provider.open(
         Airdrop.createFromConfig(
             {
-                jettonMinter: Address.parse('EQAqPr4f-D4ke-BEJ-WxQ1Yn9FP6h9n0Hft3AbUcLofNn7j2'),
-                jettonWalletCode: await provider
-                    .open(JettonMinter.createFromAddress(Address.parse('')))
-                    .getWalletCode(),
+                jettonMinter: jettonMinterAddress,
+                jettonWalletCode: await jettonMinter.getWalletCode(),
                 merkleRoot,
                 helperCode: await compile('AirdropHelper'),
             },

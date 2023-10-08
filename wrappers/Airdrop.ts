@@ -11,6 +11,7 @@ import {
     Builder,
     Slice,
 } from '@ton/core';
+import { AirdropHelper } from './AirdropHelper';
 
 export type AirdropConfig = {
     jettonMinter: Address;

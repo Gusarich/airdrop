@@ -43,3 +43,8 @@ global slice data::entry;
         .store_slice(data::entry)
     .end_cell(), 128);
 }
+
+(int) get_claimed() method_id {
+    load_data();
+    return data::claimed;
+}

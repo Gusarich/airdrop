@@ -5,6 +5,7 @@ import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
 import { JettonMinter } from '../wrappers/JettonMinter';
 import { JettonWallet } from '../wrappers/JettonWallet';
+import { AirdropHelper } from '../wrappers/AirdropHelper';
 
 describe('Airdrop', () => {
     let code: Cell;
@@ -25,20 +26,21 @@ describe('Airdrop', () => {
     let dictCell: Cell;
     let users: SandboxContract<TreasuryContract>[];
     let jettonMinter: SandboxContract<JettonMinter>;
+    let entries: AirdropEntry[];
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
 
         users = await blockchain.createWallets(1000);
 
-        let entires: AirdropEntry[] = [];
+        entries = [];
         for (let i = 0; i < 1000; i++) {
-            entires.push({
+            entries.push({
                 address: users[parseInt(i.toString())].address,
                 amount: BigInt(Math.floor(Math.random() * 1e9)),
             });
         }
-        dictionary = generateEntriesDictionary(entires);
+        dictionary = generateEntriesDictionary(entries);
 
         dictCell = beginCell().storeDictDirect(dictionary).endCell();
 
@@ -102,6 +104,19 @@ describe('Airdrop', () => {
                 .openContract(JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address)))
                 .getJettonBalance()
         ).toEqual(dictionary.get(1n)?.amount);
+        expect(
+            await blockchain
+                .openContract(
+                    AirdropHelper.createFromConfig(
+                        {
+                            airdrop: airdrop.address,
+                            entry: entries[1],
+                        },
+                        codeHelper
+                    )
+                )
+                .getClaimed()
+        ).toBeTruthy();
     });
 
     it('should claim many times', async () => {
@@ -119,6 +134,19 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(BigInt(i))?.amount);
+            expect(
+                await blockchain
+                    .openContract(
+                        AirdropHelper.createFromConfig(
+                            {
+                                airdrop: airdrop.address,
+                                entry: entries[i],
+                            },
+                            codeHelper
+                        )
+                    )
+                    .getClaimed()
+            ).toBeTruthy();
         }
     });
 
@@ -138,6 +166,19 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(1n)?.amount);
+            expect(
+                await blockchain
+                    .openContract(
+                        AirdropHelper.createFromConfig(
+                            {
+                                airdrop: airdrop.address,
+                                entry: entries[1],
+                            },
+                            codeHelper
+                        )
+                    )
+                    .getClaimed()
+            ).toBeTruthy();
         }
 
         {
@@ -156,6 +197,19 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(1n)?.amount);
+            expect(
+                await blockchain
+                    .openContract(
+                        AirdropHelper.createFromConfig(
+                            {
+                                airdrop: airdrop.address,
+                                entry: entries[1],
+                            },
+                            codeHelper
+                        )
+                    )
+                    .getClaimed()
+            ).toBeTruthy();
         }
 
         {
@@ -174,6 +228,19 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(1n)?.amount);
+            expect(
+                await blockchain
+                    .openContract(
+                        AirdropHelper.createFromConfig(
+                            {
+                                airdrop: airdrop.address,
+                                entry: entries[1],
+                            },
+                            codeHelper
+                        )
+                    )
+                    .getClaimed()
+            ).toBeTruthy();
         }
     });
 
@@ -189,5 +256,20 @@ describe('Airdrop', () => {
                 .openContract(JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address)))
                 .getJettonBalance()
         ).toEqual(0n);
+        expect(
+            (
+                await blockchain.getContract(
+                    AirdropHelper.createFromConfig(
+                        {
+                            airdrop: airdrop.address,
+                            entry: entries[1],
+                        },
+                        codeHelper
+                    ).address
+                )
+            ).accountState
+        ).toEqual({
+            type: 'uninit',
+        });
     });
 });
