@@ -26,8 +26,8 @@ global slice data::entry;
     }
 
     load_data();
-    throw_unless(error::wrong_sender, equal_slices(cs~load_msg_addr(), data::airdrop));
     throw_if(error::already_claimed, data::claimed);
+    throw_unless(error::wrong_sender, equal_slices(cs~load_msg_addr(), data::airdrop));
     set_claimed();
 
     int query_id = in_msg_body~load_uint(64);
