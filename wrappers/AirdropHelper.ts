@@ -29,6 +29,9 @@ export class AirdropHelper implements Contract {
     }
 
     async getClaimed(provider: ContractProvider): Promise<boolean> {
+        if ((await provider.getState()).state.type == 'uninit') {
+            return false;
+        }
         const stack = (await provider.get('get_claimed', [])).stack;
         return stack.readBoolean();
     }
