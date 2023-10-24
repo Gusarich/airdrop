@@ -724,9 +724,10 @@
     ton-x "^2.1.0"
     ts-node "^10.9.1"
 
-"@ton/core@github:Gusarich/ton-core-1":
-  version "0.49.1"
-  resolved "https://codeload.github.com/Gusarich/ton-core-1/tar.gz/42b9c8f51bdff1ced6185579a613331ffe851f4c"
+"@ton/core@^0.53.0":
+  version "0.53.0"
+  resolved "https://registry.yarnpkg.com/@ton/core/-/core-0.53.0.tgz#9a2c101c4d2f48d0c9ec0e889b067da72d914df1"
+  integrity sha512-tB5RxXFS6Z/ivmsqMn/eebEZmkWXIAz+hS1PDZXhbBkcvnBTknZ12g2AFrZtXyuvpm8O6SbL15UI/3NgkyIWzQ==
   dependencies:
     symbol.inspect "1.0.1"
 
