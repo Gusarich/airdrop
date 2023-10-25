@@ -65,7 +65,7 @@ global int context::query_id;
             .store_uint(context::query_id, 64)
             .store_coins(amount)
             .store_slice(recipient)
-            .store_slice(my_address())
+            .store_slice(recipient)
             .store_uint(0, 1)
             .store_coins(1000000)
             .store_uint(0, 1)
