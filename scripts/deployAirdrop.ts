@@ -7,23 +7,24 @@ export async function run(provider: NetworkProvider) {
     const entries: AirdropEntry[] = [
         {
             address: Address.parse('EQBKgXCNLPexWhs2L79kiARR1phGH1LwXxRbNsCFF9doc2lN'),
-            amount: toNano('100'),
+            amount: toNano('1'),
         },
         {
-            address: Address.parse('EQDxC1erzS2fub_CNmkdH1A3hRs6xMDrWBmOD2yQOZjRuruv'),
-            amount: toNano('200'),
+            address: Address.parse('EQBIhPuWmjT7fP-VomuTWseE8JNWv2q7QYfsVQ1IZwnMk8wL'),
+            amount: toNano('2'),
         },
         {
             address: Address.parse('EQB4cwGljhouzFwc6EHpCacCtsK7_XIj-tNfM5udgW6IxO9R'),
-            amount: toNano('150'),
+            amount: toNano('1.5'),
         },
     ];
 
     const dict = generateEntriesDictionary(entries);
     const dictCell = beginCell().storeDictDirect(dict).endCell();
+    console.log(`Dictionary cell (store it somewhere on your backend: ${dictCell.toBoc().toString('base64')}`);
     const merkleRoot = BigInt('0x' + dictCell.hash().toString('hex'));
 
-    const jettonMinterAddress = Address.parse('EQAqPr4f-D4ke-BEJ-WxQ1Yn9FP6h9n0Hft3AbUcLofNn7j2');
+    const jettonMinterAddress = Address.parse('EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw');
     const jettonMinter = provider.open(JettonMinter.createFromAddress(jettonMinterAddress));
 
     const airdrop = provider.open(

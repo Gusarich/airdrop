@@ -1,4 +1,4 @@
-import { Blockchain, SandboxContract, TreasuryContract, printTransactionFees } from '@ton/sandbox';
+import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
 import { Cell, Dictionary, beginCell, toNano } from '@ton/core';
 import { Airdrop, AirdropEntry, generateEntriesDictionary } from '../wrappers/Airdrop';
 import '@ton/test-utils';
@@ -94,7 +94,19 @@ describe('Airdrop', () => {
 
     it('should claim one time', async () => {
         const merkleProof = dictionary.generateMerkleProof(1n);
-        const result = await airdrop.sendClaim(users[1].getSender(), toNano('0.15'), 1n, merkleProof);
+        const helper = blockchain.openContract(
+            AirdropHelper.createFromConfig(
+                {
+                    airdrop: airdrop.address,
+                    index: 1n,
+                    proof: merkleProof,
+                    entry: entries[1],
+                },
+                codeHelper
+            )
+        );
+        await helper.sendDeploy(users[1].getSender());
+        const result = await helper.sendClaim(123n);
         expect(result.transactions).toHaveTransaction({
             on: airdrop.address,
             success: true,
@@ -104,25 +116,25 @@ describe('Airdrop', () => {
                 .openContract(JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address)))
                 .getJettonBalance()
         ).toEqual(dictionary.get(1n)?.amount);
-        expect(
-            await blockchain
-                .openContract(
-                    AirdropHelper.createFromConfig(
-                        {
-                            airdrop: airdrop.address,
-                            entry: entries[1],
-                        },
-                        codeHelper
-                    )
-                )
-                .getClaimed()
-        ).toBeTruthy();
+        expect(await helper.getClaimed()).toBeTruthy();
     });
 
     it('should claim many times', async () => {
-        for (let i = 0; i < 1000; i += Math.floor(Math.random() * 50)) {
+        for (let i = 0; i < 1000; i += 1 + Math.floor(Math.random() * 25)) {
             const merkleProof = dictionary.generateMerkleProof(BigInt(i));
-            const result = await airdrop.sendClaim(users[i].getSender(), toNano('0.15'), BigInt(i), merkleProof);
+            const helper = blockchain.openContract(
+                AirdropHelper.createFromConfig(
+                    {
+                        airdrop: airdrop.address,
+                        index: BigInt(i),
+                        proof: merkleProof,
+                        entry: entries[i],
+                    },
+                    codeHelper
+                )
+            );
+            await helper.sendDeploy(users[i].getSender());
+            const result = await helper.sendClaim(123n);
             expect(result.transactions).toHaveTransaction({
                 on: airdrop.address,
                 success: true,
@@ -134,27 +146,28 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(BigInt(i))?.amount);
-            expect(
-                await blockchain
-                    .openContract(
-                        AirdropHelper.createFromConfig(
-                            {
-                                airdrop: airdrop.address,
-                                entry: entries[i],
-                            },
-                            codeHelper
-                        )
-                    )
-                    .getClaimed()
-            ).toBeTruthy();
+            expect(await helper.getClaimed()).toBeTruthy();
         }
     });
 
     it('should not claim if already did', async () => {
         const merkleProof = dictionary.generateMerkleProof(1n);
 
+        const helper = blockchain.openContract(
+            AirdropHelper.createFromConfig(
+                {
+                    airdrop: airdrop.address,
+                    index: 1n,
+                    proof: merkleProof,
+                    entry: entries[1],
+                },
+                codeHelper
+            )
+        );
+        await helper.sendDeploy(users[1].getSender());
+
         {
-            const result = await airdrop.sendClaim(users[1].getSender(), toNano('0.15'), 1n, merkleProof);
+            const result = await helper.sendClaim(123n);
             expect(result.transactions).toHaveTransaction({
                 on: airdrop.address,
                 success: true,
@@ -166,30 +179,11 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(1n)?.amount);
-            expect(
-                await blockchain
-                    .openContract(
-                        AirdropHelper.createFromConfig(
-                            {
-                                airdrop: airdrop.address,
-                                entry: entries[1],
-                            },
-                            codeHelper
-                        )
-                    )
-                    .getClaimed()
-            ).toBeTruthy();
+            expect(await helper.getClaimed()).toBeTruthy();
         }
 
         {
-            const result = await airdrop.sendClaim(users[1].getSender(), toNano('0.15'), 1n, merkleProof);
-            expect(result.transactions).toHaveTransaction({
-                on: airdrop.address,
-                success: true,
-            });
-            expect(result.transactions).toHaveTransaction({
-                exitCode: 702,
-            });
+            await expect(helper.sendClaim(123n)).rejects.toThrow();
             expect(
                 await blockchain
                     .openContract(
@@ -197,30 +191,11 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(1n)?.amount);
-            expect(
-                await blockchain
-                    .openContract(
-                        AirdropHelper.createFromConfig(
-                            {
-                                airdrop: airdrop.address,
-                                entry: entries[1],
-                            },
-                            codeHelper
-                        )
-                    )
-                    .getClaimed()
-            ).toBeTruthy();
+            expect(await helper.getClaimed()).toBeTruthy();
         }
 
         {
-            const result = await airdrop.sendClaim(users[1].getSender(), toNano('0.15'), 1n, merkleProof);
-            expect(result.transactions).toHaveTransaction({
-                on: airdrop.address,
-                success: true,
-            });
-            expect(result.transactions).toHaveTransaction({
-                exitCode: 702,
-            });
+            await expect(helper.sendClaim(123n)).rejects.toThrow();
             expect(
                 await blockchain
                     .openContract(
@@ -228,48 +203,68 @@ describe('Airdrop', () => {
                     )
                     .getJettonBalance()
             ).toEqual(dictionary.get(1n)?.amount);
-            expect(
-                await blockchain
-                    .openContract(
-                        AirdropHelper.createFromConfig(
-                            {
-                                airdrop: airdrop.address,
-                                entry: entries[1],
-                            },
-                            codeHelper
-                        )
-                    )
-                    .getClaimed()
-            ).toBeTruthy();
+            expect(await helper.getClaimed()).toBeTruthy();
         }
     });
 
     it('should not claim with wrong index', async () => {
-        const merkleProof = dictionary.generateMerkleProof(2n);
-        const result = await airdrop.sendClaim(users[1].getSender(), toNano('0.15'), 1n, merkleProof);
-        expect(result.transactions).toHaveTransaction({
-            on: airdrop.address,
-            exitCode: 9,
-        });
-        expect(
-            await blockchain
-                .openContract(JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address)))
-                .getJettonBalance()
-        ).toEqual(0n);
-        expect(
-            (
-                await blockchain.getContract(
-                    AirdropHelper.createFromConfig(
-                        {
-                            airdrop: airdrop.address,
-                            entry: entries[1],
-                        },
-                        codeHelper
-                    ).address
+        {
+            const merkleProof = dictionary.generateMerkleProof(2n);
+            const helper = blockchain.openContract(
+                AirdropHelper.createFromConfig(
+                    {
+                        airdrop: airdrop.address,
+                        index: 1n,
+                        proof: merkleProof,
+                        entry: entries[1],
+                    },
+                    codeHelper
                 )
-            ).accountState
-        ).toEqual({
-            type: 'uninit',
-        });
+            );
+            await helper.sendDeploy(users[1].getSender());
+            const result = await helper.sendClaim(123n);
+            expect(result.transactions).toHaveTransaction({
+                from: helper.address,
+                to: airdrop.address,
+                success: false,
+            });
+            expect(
+                await blockchain
+                    .openContract(
+                        JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address))
+                    )
+                    .getJettonBalance()
+            ).toEqual(0n);
+        }
+
+        {
+            const merkleProof = dictionary.generateMerkleProof(1n);
+            const helper = blockchain.openContract(
+                AirdropHelper.createFromConfig(
+                    {
+                        airdrop: airdrop.address,
+                        index: 1n,
+                        proof: merkleProof,
+                        entry: entries[1],
+                    },
+                    codeHelper
+                )
+            );
+            await helper.sendDeploy(users[1].getSender());
+            const result = await helper.sendClaim(123n);
+            expect(result.transactions).toHaveTransaction({
+                from: helper.address,
+                to: airdrop.address,
+                success: true,
+            });
+            expect(
+                await blockchain
+                    .openContract(
+                        JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address))
+                    )
+                    .getJettonBalance()
+            ).toEqual(dictionary.get(1n)?.amount);
+            expect(await helper.getClaimed()).toBeTruthy();
+        }
     });
 });

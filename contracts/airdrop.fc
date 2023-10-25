@@ -23,13 +23,15 @@ global int context::query_id;
     data::helper_code = ds~load_ref();
 }
 
-(cell) helper_stateinit (slice entry) {
+(cell) helper_stateinit (slice entry, int index, cell proof) {
     return begin_cell()
         .store_uint(6, 5)
         .store_ref(data::helper_code)
         .store_ref(begin_cell()
             .store_uint(0, 1)
             .store_slice(my_address())
+            .store_uint(index, 256)
+            .store_ref(proof)
             .store_slice(entry)
         .end_cell())
     .end_cell();
@@ -40,18 +42,6 @@ global int context::query_id;
         .store_uint(0x400, 11)
         .store_uint(cell_hash(stateinit), 256)
     .end_cell().begin_parse();
-}
-
-() claim (slice entry) impure {
-    cell stateinit = helper_stateinit(entry);
-    send_raw_message(begin_cell()
-        .store_uint(0x18, 6)
-        .store_slice(helper_address(stateinit))
-        .store_coins(0)
-        .store_uint(6, 108)
-        .store_ref(stateinit)
-        .store_uint(context::query_id, 64)
-    .end_cell(), 64);
 }
 
 () send_tokens (slice recipient, int amount) impure {
@@ -67,7 +57,7 @@ global int context::query_id;
             .store_slice(recipient)
             .store_slice(recipient)
             .store_uint(0, 1)
-            .store_coins(1000000)
+            .store_coins(10000000)
             .store_uint(0, 1)
         .end_cell())
     .end_cell(), 64);
@@ -84,11 +74,10 @@ global int context::query_id;
 
     load_data();
 
-    if (context::op == op::claim) {
-        throw_unless(error::not_enough_coins, msg_value >= 150000000);
-        
+    if (context::op == op::process_claim) {
         int index = in_msg_body~load_uint(256);
         cell proof_cell = in_msg_body~load_ref();
+        slice entry = in_msg_body;
 
         (slice cs, int exotic?) = proof_cell.begin_parse_exotic();
         throw_unless(42, exotic?);
@@ -98,18 +87,10 @@ global int context::query_id;
         cell dict = cs~load_ref();
         (slice data, int found?) = dict.udict_get?(256, index);
         throw_unless(45, found?);
+        
+        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry, index, proof_cell))));
 
-        claim(data);
-    }
-
-    elseif (context::op == op::process_claim) {
-        slice entry = in_msg_body;
-        slice claimer = in_msg_body~load_msg_addr();
-        int amount = in_msg_body~load_coins();
-
-        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry))));
-
-        send_tokens(claimer, amount);
+        send_tokens(entry~load_msg_addr(), entry~load_coins());
     }
 
     else {

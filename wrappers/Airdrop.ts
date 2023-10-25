@@ -11,7 +11,6 @@ import {
     Builder,
     Slice,
 } from '@ton/core';
-import { AirdropHelper } from './AirdropHelper';
 
 export type AirdropConfig = {
     jettonMinter: Address;
@@ -74,19 +73,6 @@ export class Airdrop implements Contract {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().endCell(),
-        });
-    }
-
-    async sendClaim(provider: ContractProvider, via: Sender, value: bigint, index: bigint, merkleProof: Cell) {
-        await provider.internal(via, {
-            value,
-            sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell()
-                .storeUint(0x578230d4, 32)
-                .storeUint(0, 64)
-                .storeUint(index, 256)
-                .storeRef(merkleProof)
-                .endCell(),
         });
     }
 }
