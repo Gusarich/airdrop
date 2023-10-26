@@ -1,6 +1,7 @@
-import { Address, Cell, Dictionary, toNano } from '@ton/core';
-import { Airdrop, airdropEntryValue } from '../wrappers/Airdrop';
-import { NetworkProvider } from '@ton/blueprint';
+import { Address, Cell, Dictionary } from '@ton/core';
+import { airdropEntryValue } from '../wrappers/Airdrop';
+import { NetworkProvider, compile } from '@ton/blueprint';
+import { AirdropHelper } from '../wrappers/AirdropHelper';
 
 export async function run(provider: NetworkProvider) {
     // suppose that you have the cell in base64 form stored somewhere
@@ -9,9 +10,26 @@ export async function run(provider: NetworkProvider) {
     );
     const dict = dictCell.beginParse().loadDictDirect(Dictionary.Keys.BigUint(256), airdropEntryValue);
 
-    const airdrop = provider.open(
-        Airdrop.createFromAddress(Address.parse('EQDbmFBVdzH06IsSIz7jriXHUWnce3ssCNNdcdYwR1u-_FzL'))
+    const entryIndex = 2n;
+
+    const proof = dict.generateMerkleProof(entryIndex);
+
+    const helper = provider.open(
+        AirdropHelper.createFromConfig(
+            {
+                airdrop: Address.parse('EQAGUXoAPHIHYleSbSE05egNAlK8YAaYqUQsMho709gMBXU2'),
+                index: entryIndex,
+                proofHash: proof.hash(),
+                entry: dict.get(entryIndex)!,
+            },
+            await compile('AirdropHelper')
+        )
     );
 
-    await airdrop.sendClaim(provider.sender(), toNano('0.15'), 1n, dict.generateMerkleProof(1n));
+    if (!(await provider.isContractDeployed(helper.address))) {
+        await helper.sendDeploy(provider.sender());
+        await provider.waitForDeploy(helper.address);
+    }
+
+    await helper.sendClaim(123n, proof); // 123 -> any query_id
 }

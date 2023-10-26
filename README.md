@@ -1,7 +1,5 @@
 # Scalable Airdrop System
 
-> :warning: **Work in progress**
-
 This repository contains an implementation of a Scalable Airdrop System for the TON blockchain. It can be used to distribute Jettons on-chain to any number of wallets.
 
 ## Table of contents
@@ -53,7 +51,16 @@ For example, this system could be adapted not only for Airdrops of Jettons that 
 
 ## Documentation
 
-The process of setting up an Airdrop is described below.
+### Important Consideration
+
+Currently, most wallet applications have a limitation: they do not support the sending of exotic cells. Due to this, the present implementation relies on external messages for transmitting a Merkle proofs. As a result, the process to claim an airdrop involves a two-step procedure:
+
+1. Send an internal deployment message, excluding the Merkle proof cell.
+2. Send an external message containing the Merkle proof.
+
+This method may seem less streamlined and may pose challenges for both developers and users. However, given the current constraints, it is the most viable approach to operate this smart contract system.
+
+> :warning: As soon as wallet applications support the sending of exotic cells, all smart contracts will undergo a rework to enhance their efficiency and usability.
 
 ### Preparing the list of entries
 

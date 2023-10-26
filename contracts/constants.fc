@@ -1,9 +1,10 @@
-const int op::process_claim = 0x687b5452;
+const int op::process_claim = 0x1e6aec90;
 const int op::transfer = 0x0f8a7ea5;
 
 const int error::already_claimed = 702;
 const int error::wrong_sender = 703;
 const int error::not_enough_coins = 704;
+const int error::wrong_proof = 705;
 
 const int const::min_balance = 50000000;
 const int const::fee = 50000000;

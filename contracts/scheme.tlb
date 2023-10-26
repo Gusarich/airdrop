@@ -1,10 +1,10 @@
 _ jetton_minter:MsgAddressInt jetton_wallet_code:^Cell merkle_root:uint256 helper_code:^Cell = AirdropStorage;
 
-not_claimed$0 airdrop:MsgAddressInt index:uint256 proof:^(MerkleProof (HashmapE 256 AirdropEntry)) entry:AirdropEntry = AirdropHelperStorage;
+not_claimed$0 airdrop:MsgAddressInt proof_hash:uint256 remaining:^[ index:uint256 entry:AirdropEntry ] = AirdropHelperStorage;
 claimed$1 = AirdropHelperStorage;
 
 _ address:MsgAddressInt amount:Coins = AirdropEntry;
 
-claim#_ query_id:uint64 = ExternalMsgBody;
+claim#_ query_id:uint64 proof:^(MerkleProof (HashmapE 256 AirdropEntry)) = ExternalMsgBody;
 
-process_claim#687b5452 query_id:uint64 index:uint256 proof:^(MerkleProof (HashmapE 256 AirdropEntry)) entry:AirdropEntry = InternalMsgBody;
+process_claim#1e6aec90 query_id:uint64 proof:^(MerkleProof (HashmapE 256 AirdropEntry)) index:uint256 entry:AirdropEntry = InternalMsgBody;

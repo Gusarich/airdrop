@@ -2,8 +2,6 @@
 #include "jetton/jetton-utils.fc";
 #include "constants.fc";
 
-(slice, int) begin_parse_exotic (cell c) asm "XCTOS";
-
 global slice data::jetton_minter;
 global cell data::jetton_wallet_code;
 global slice data::jetton_wallet;
@@ -14,7 +12,7 @@ global int context::op;
 global slice context::sender;
 global int context::query_id;
 
-() load_data () impure inline {
+() load_data() impure inline {
     slice ds = get_data().begin_parse();
     data::jetton_minter = ds~load_msg_addr();
     data::jetton_wallet_code = ds~load_ref();
@@ -23,28 +21,32 @@ global int context::query_id;
     data::helper_code = ds~load_ref();
 }
 
-(cell) helper_stateinit (slice entry, int index, cell proof) {
+(slice, int) begin_parse_exotic(cell c) asm "XCTOS";
+
+(cell) helper_stateinit(slice entry, int proof_hash, int index) {
     return begin_cell()
         .store_uint(6, 5)
         .store_ref(data::helper_code)
         .store_ref(begin_cell()
             .store_uint(0, 1)
             .store_slice(my_address())
-            .store_uint(index, 256)
-            .store_ref(proof)
-            .store_slice(entry)
+            .store_uint(proof_hash, 256)
+            .store_ref(begin_cell()
+                .store_uint(index, 256)
+                .store_slice(entry)
+            .end_cell())
         .end_cell())
     .end_cell();
 }
 
-(slice) helper_address (cell stateinit) {
+(slice) helper_address(cell stateinit) {
     return begin_cell()
         .store_uint(0x400, 11)
         .store_uint(cell_hash(stateinit), 256)
     .end_cell().begin_parse();
 }
 
-() send_tokens (slice recipient, int amount) impure {
+() send_tokens(slice recipient, int amount) impure {
     send_raw_message(begin_cell()
         .store_uint(0x18, 6)
         .store_slice(data::jetton_wallet)
@@ -63,7 +65,7 @@ global int context::query_id;
     .end_cell(), 64);
 }
 
-() recv_internal (int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
     if (in_msg_body.slice_bits() < 96) {
         return ();
     }
@@ -75,8 +77,8 @@ global int context::query_id;
     load_data();
 
     if (context::op == op::process_claim) {
-        int index = in_msg_body~load_uint(256);
         cell proof_cell = in_msg_body~load_ref();
+        int index = in_msg_body~load_uint(256);
         slice entry = in_msg_body;
 
         (slice cs, int exotic?) = proof_cell.begin_parse_exotic();
@@ -87,8 +89,8 @@ global int context::query_id;
         cell dict = cs~load_ref();
         (slice data, int found?) = dict.udict_get?(256, index);
         throw_unless(45, found?);
-        
-        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry, index, proof_cell))));
+
+        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry, proof_cell.cell_hash(), index))));
 
         send_tokens(entry~load_msg_addr(), entry~load_coins());
     }

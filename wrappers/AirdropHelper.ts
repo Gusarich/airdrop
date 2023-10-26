@@ -3,8 +3,8 @@ import { AirdropEntry } from './Airdrop';
 
 export type AirdropHelperConfig = {
     airdrop: Address;
+    proofHash: Buffer;
     index: bigint;
-    proof: Cell;
     entry: AirdropEntry;
 };
 
@@ -12,10 +12,15 @@ export function airdropHelperConfigToCell(config: AirdropHelperConfig): Cell {
     return beginCell()
         .storeBit(false)
         .storeAddress(config.airdrop)
-        .storeUint(config.index, 256)
-        .storeRef(config.proof)
-        .storeAddress(config.entry.address)
-        .storeCoins(config.entry.amount)
+        .storeBuffer(config.proofHash, 32)
+        .storeRef(
+            beginCell()
+                .storeUint(config.index, 256)
+                .storeAddress(config.entry.address)
+                .storeCoins(config.entry.amount)
+                .endCell()
+        )
+
         .endCell();
 }
 
@@ -38,8 +43,8 @@ export class AirdropHelper implements Contract {
         });
     }
 
-    async sendClaim(provider: ContractProvider, queryId: bigint) {
-        await provider.external(beginCell().storeUint(queryId, 64).endCell());
+    async sendClaim(provider: ContractProvider, queryId: bigint, proof: Cell) {
+        await provider.external(beginCell().storeUint(queryId, 64).storeRef(proof).endCell());
     }
 
     async getClaimed(provider: ContractProvider): Promise<boolean> {

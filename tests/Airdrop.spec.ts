@@ -99,14 +99,14 @@ describe('Airdrop', () => {
                 {
                     airdrop: airdrop.address,
                     index: 1n,
-                    proof: merkleProof,
+                    proofHash: merkleProof.hash(),
                     entry: entries[1],
                 },
                 codeHelper
             )
         );
         await helper.sendDeploy(users[1].getSender());
-        const result = await helper.sendClaim(123n);
+        const result = await helper.sendClaim(123n, merkleProof);
         expect(result.transactions).toHaveTransaction({
             on: airdrop.address,
             success: true,
@@ -127,14 +127,14 @@ describe('Airdrop', () => {
                     {
                         airdrop: airdrop.address,
                         index: BigInt(i),
-                        proof: merkleProof,
+                        proofHash: merkleProof.hash(),
                         entry: entries[i],
                     },
                     codeHelper
                 )
             );
             await helper.sendDeploy(users[i].getSender());
-            const result = await helper.sendClaim(123n);
+            const result = await helper.sendClaim(123n, merkleProof);
             expect(result.transactions).toHaveTransaction({
                 on: airdrop.address,
                 success: true,
@@ -158,7 +158,7 @@ describe('Airdrop', () => {
                 {
                     airdrop: airdrop.address,
                     index: 1n,
-                    proof: merkleProof,
+                    proofHash: merkleProof.hash(),
                     entry: entries[1],
                 },
                 codeHelper
@@ -167,7 +167,7 @@ describe('Airdrop', () => {
         await helper.sendDeploy(users[1].getSender());
 
         {
-            const result = await helper.sendClaim(123n);
+            const result = await helper.sendClaim(123n, merkleProof);
             expect(result.transactions).toHaveTransaction({
                 on: airdrop.address,
                 success: true,
@@ -183,7 +183,7 @@ describe('Airdrop', () => {
         }
 
         {
-            await expect(helper.sendClaim(123n)).rejects.toThrow();
+            await expect(helper.sendClaim(123n, merkleProof)).rejects.toThrow();
             expect(
                 await blockchain
                     .openContract(
@@ -195,7 +195,7 @@ describe('Airdrop', () => {
         }
 
         {
-            await expect(helper.sendClaim(123n)).rejects.toThrow();
+            await expect(helper.sendClaim(123n, merkleProof)).rejects.toThrow();
             expect(
                 await blockchain
                     .openContract(
@@ -215,14 +215,14 @@ describe('Airdrop', () => {
                     {
                         airdrop: airdrop.address,
                         index: 1n,
-                        proof: merkleProof,
+                        proofHash: merkleProof.hash(),
                         entry: entries[1],
                     },
                     codeHelper
                 )
             );
             await helper.sendDeploy(users[1].getSender());
-            const result = await helper.sendClaim(123n);
+            const result = await helper.sendClaim(123n, merkleProof);
             expect(result.transactions).toHaveTransaction({
                 from: helper.address,
                 to: airdrop.address,
@@ -244,14 +244,14 @@ describe('Airdrop', () => {
                     {
                         airdrop: airdrop.address,
                         index: 1n,
-                        proof: merkleProof,
+                        proofHash: merkleProof.hash(),
                         entry: entries[1],
                     },
                     codeHelper
                 )
             );
             await helper.sendDeploy(users[1].getSender());
-            const result = await helper.sendClaim(123n);
+            const result = await helper.sendClaim(123n, merkleProof);
             expect(result.transactions).toHaveTransaction({
                 from: helper.address,
                 to: airdrop.address,
