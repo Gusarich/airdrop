@@ -127,20 +127,39 @@ Simply transfer the required amount (sum of all entries) to the `airdrop.address
 
 ### Claiming the Airdrop
 
-In order to claim an Airdrop, you need to call `sendClaim` method of `airdrop` object you have created on deployment. You can also create such an object for already deployed Airdrops by their address via `createFromAddress` method.
+In order to claim an Airdrop, you need to call `sendClaim` method of `airdropHelper` smart contract which you should deploy.
 
 These calls can easily be integrated into front-end of your website or into some Telegram bot.
 
 ```ts
 // suppose that you have the cell in base64 form stored somewhere
-const dictCell = Cell.fromBase64('te6ccgEBAQEABgAACCiAmgEBAQEABgAAgKIBAQEBAQAGAAAIogEBAQ');
-const dict = dictCell.beginParse().loadDictDirect(Dictionary.Keys.BigUint(256), AirdropEntryValue);
+const dictCell = Cell.fromBase64(
+    'te6cckEBBQEAhgACA8/oAgEATUgA8OYDSxw0XZi4OdCD0hNOBW2Fd/rkR/Wmvmc3OwLdEYiLLQXgEAIBIAQDAE0gAkQn3LTRp9vn/K0TXJrWPCeEmrX7VdoMP2KoakM4TmSaO5rKAEAATSACVAuEaWe9itDZsX37JEAijrTCMPqXgvii2bYEKL67Q5odzWUAQC6Eo5U='
+);
+const dict = dictCell.beginParse().loadDictDirect(Dictionary.Keys.BigUint(256), airdropEntryValue);
 
-const airdrop = provider.open(
-    Airdrop.createFromAddress(Address.parse('EQB4cwGljhouzFwc6EHpCacCtsK7_XIj-tNfM5udgW6IxO9R'))
+const entryIndex = 123n;
+
+const proof = dict.generateMerkleProof(entryIndex);
+
+const helper = provider.open(
+    AirdropHelper.createFromConfig(
+        {
+            airdrop: Address.parse('EQAGUXoAPHIHYleSbSE05egNAlK8YAaYqUQsMho709gMBXU2'),
+            index: entryIndex,
+            proofHash: proof.hash(),
+            entry: dict.get(entryIndex)!,
+        },
+        await compile('AirdropHelper')
+    )
 );
 
-await airdrop.sendClaim(provider.sender(), toNano('0.15'), 123n, dict.generateMerkleProof(123n));
+if (!(await provider.isContractDeployed(helper.address))) {
+    await helper.sendDeploy(provider.sender());
+    await provider.waitForDeploy(helper.address);
+}
+
+await helper.sendClaim(0n, proof);
 ```
 
 The cell containing dictionary must be stored in some reliable place. It can be your own server, some cloud storage or even TON Storage.
