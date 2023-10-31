@@ -5,7 +5,6 @@ export type AirdropHelperConfig = {
     airdrop: Address;
     proofHash: Buffer;
     index: bigint;
-    entry: AirdropEntry;
 };
 
 export function airdropHelperConfigToCell(config: AirdropHelperConfig): Cell {
@@ -13,14 +12,7 @@ export function airdropHelperConfigToCell(config: AirdropHelperConfig): Cell {
         .storeBit(false)
         .storeAddress(config.airdrop)
         .storeBuffer(config.proofHash, 32)
-        .storeRef(
-            beginCell()
-                .storeUint(config.index, 256)
-                .storeAddress(config.entry.address)
-                .storeCoins(config.entry.amount)
-                .endCell()
-        )
-
+        .storeUint(config.index, 256)
         .endCell();
 }
 

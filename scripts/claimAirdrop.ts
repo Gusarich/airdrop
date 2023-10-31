@@ -20,7 +20,6 @@ export async function run(provider: NetworkProvider) {
                 airdrop: Address.parse('EQAGUXoAPHIHYleSbSE05egNAlK8YAaYqUQsMho709gMBXU2'),
                 index: entryIndex,
                 proofHash: proof.hash(),
-                entry: dict.get(entryIndex)!,
             },
             await compile('AirdropHelper')
         )

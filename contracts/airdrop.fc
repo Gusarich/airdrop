@@ -35,10 +35,7 @@ global int context::query_id;
             .store_uint(0, 1)
             .store_slice(my_address())
             .store_uint(proof_hash, 256)
-            .store_ref(begin_cell()
-                .store_uint(index, 256)
-                .store_slice(entry)
-            .end_cell())
+            .store_uint(index, 256)
         .end_cell())
     .end_cell();
 }
@@ -88,9 +85,6 @@ global int context::query_id;
     elseif (context::op == op::process_claim) {
         cell proof_cell = in_msg_body~load_ref();
         int index = in_msg_body~load_uint(256);
-        slice entry = in_msg_body;
-
-        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry, proof_cell.cell_hash(), index))));
 
         (slice cs, int exotic?) = proof_cell.begin_parse_exotic();
         throw_unless(42, exotic?);
@@ -98,9 +92,10 @@ global int context::query_id;
         throw_unless(44, data::merkle_root == cs~load_uint(256));
 
         cell dict = cs~load_ref();
-        (slice data, int found?) = dict.udict_get?(256, index);
+        (slice entry, int found?) = dict.udict_get?(256, index);
         throw_unless(45, found?);
-        throw_unless(46, equal_slices(entry, data));
+
+        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry, proof_cell.cell_hash(), index))));
 
         send_tokens(entry~load_msg_addr(), entry~load_coins());
     }

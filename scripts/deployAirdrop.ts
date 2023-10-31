@@ -30,8 +30,6 @@ export async function run(provider: NetworkProvider) {
     const airdrop = provider.open(
         Airdrop.createFromConfig(
             {
-                jettonMinter: jettonMinterAddress,
-                jettonWalletCode: await jettonMinter.getWalletCode(),
                 merkleRoot,
                 helperCode: await compile('AirdropHelper'),
             },
@@ -39,7 +37,7 @@ export async function run(provider: NetworkProvider) {
         )
     );
 
-    await airdrop.sendDeploy(provider.sender(), toNano('0.05'));
+    await airdrop.sendDeploy(provider.sender(), toNano('0.05'), await jettonMinter.getWalletAddressOf(airdrop.address));
 
     await provider.waitForDeploy(airdrop.address);
 

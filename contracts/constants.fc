@@ -1,4 +1,4 @@
-const int op::process_claim = 0x1e6aec90;
+const int op::process_claim = 0x43c7d5c9;
 const int op::transfer = 0x0f8a7ea5;
 
 const int error::already_claimed = 702;
