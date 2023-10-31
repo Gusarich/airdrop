@@ -78,6 +78,7 @@ global int context::query_id;
     load_data();
 
     if (context::op == 0) {
+        throw_unless(error::already_deployed, data::jetton_wallet.preload_uint(2) == 0);
         data::jetton_wallet = in_msg_body~load_msg_addr();
         save_data();
     }
