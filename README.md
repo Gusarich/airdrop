@@ -108,8 +108,6 @@ Here is an example.
 const airdrop = provider.open(
     Airdrop.createFromConfig(
         {
-            jettonMinter: Address.parse('EQAqPr4f-D4ke-BEJ-WxQ1Yn9FP6h9n0Hft3AbUcLofNn7j2'),
-            jettonWalletCode: await provider.open(JettonMinter.createFromAddress(Address.parse(''))).getWalletCode(),
             merkleRoot,
             helperCode: await compile('AirdropHelper'),
         },
@@ -117,7 +115,7 @@ const airdrop = provider.open(
     )
 );
 
-await airdrop.sendDeploy(provider.sender(), toNano('0.05'));
+await airdrop.sendDeploy(provider.sender(), toNano('0.05'), await jettonMinter.getWalletAddressOf(airdrop.address));
 ```
 
 After the transaction is succesfully sent and confirmed on-chain, your Airdrop will become available to use.
@@ -148,7 +146,6 @@ const helper = provider.open(
             airdrop: Address.parse('EQAGUXoAPHIHYleSbSE05egNAlK8YAaYqUQsMho709gMBXU2'),
             index: entryIndex,
             proofHash: proof.hash(),
-            entry: dict.get(entryIndex)!,
         },
         await compile('AirdropHelper')
     )
