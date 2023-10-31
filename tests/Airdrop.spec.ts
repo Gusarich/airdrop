@@ -61,15 +61,17 @@ describe('Airdrop', () => {
             Airdrop.createFromConfig(
                 {
                     helperCode: codeHelper,
-                    jettonMinter: jettonMinter.address,
-                    jettonWalletCode: codeJettonWallet,
                     merkleRoot: BigInt('0x' + dictCell.hash().toString('hex')),
                 },
                 code
             )
         );
 
-        const deployResult = await airdrop.sendDeploy(users[0].getSender(), toNano('0.05'));
+        const deployResult = await airdrop.sendDeploy(
+            users[0].getSender(),
+            toNano('0.05'),
+            await jettonMinter.getWalletAddressOf(airdrop.address)
+        );
 
         expect(deployResult.transactions).toHaveTransaction({
             from: users[0].address,
@@ -266,5 +268,36 @@ describe('Airdrop', () => {
             ).toEqual(dictionary.get(1n)?.amount);
             expect(await helper.getClaimed()).toBeTruthy();
         }
+    });
+
+    it('should not claim with faked entry', async () => {
+        const merkleProof = dictionary.generateMerkleProof(1n);
+        const helper = blockchain.openContract(
+            AirdropHelper.createFromConfig(
+                {
+                    airdrop: airdrop.address,
+                    index: 1n,
+                    proofHash: merkleProof.hash(),
+                    entry: {
+                        address: users[1].address,
+                        amount: 123456n,
+                    },
+                },
+                codeHelper
+            )
+        );
+        await helper.sendDeploy(users[1].getSender());
+        const result = await helper.sendClaim(123n, merkleProof);
+        expect(result.transactions).toHaveTransaction({
+            from: helper.address,
+            to: airdrop.address,
+            success: false,
+            exitCode: 46,
+        });
+        expect(
+            await blockchain
+                .openContract(JettonWallet.createFromAddress(await jettonMinter.getWalletAddressOf(users[1].address)))
+                .getJettonBalance()
+        ).toEqual(0n);
     });
 });

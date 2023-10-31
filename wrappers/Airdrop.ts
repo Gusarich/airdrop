@@ -13,18 +13,16 @@ import {
 } from '@ton/core';
 
 export type AirdropConfig = {
-    jettonMinter: Address;
-    jettonWalletCode: Cell;
     merkleRoot: bigint;
     helperCode: Cell;
 };
 
 export function airdropConfigToCell(config: AirdropConfig): Cell {
     return beginCell()
-        .storeAddress(config.jettonMinter)
-        .storeRef(config.jettonWalletCode)
+        .storeUint(0, 2)
         .storeUint(config.merkleRoot, 256)
         .storeRef(config.helperCode)
+        .storeUint(Math.floor(Math.random() * 1e9), 64)
         .endCell();
 }
 
@@ -68,11 +66,11 @@ export class Airdrop implements Contract {
         return new Airdrop(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint, jettonWallet: Address) {
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().endCell(),
+            body: beginCell().storeUint(0, 96).storeAddress(jettonWallet).endCell(),
         });
     }
 }
