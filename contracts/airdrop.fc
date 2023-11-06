@@ -27,7 +27,7 @@ global int context::query_id;
 
 (slice, int) begin_parse_exotic(cell c) asm "XCTOS";
 
-(cell) helper_stateinit(slice entry, int proof_hash, int index) {
+(cell) helper_stateinit(int proof_hash, int index) {
     return begin_cell()
         .store_uint(6, 5)
         .store_ref(data::helper_code)
@@ -54,7 +54,7 @@ global int context::query_id;
         .store_coins(0)
         .store_uint(1, 107)
         .store_ref(begin_cell()
-            .store_uint(op::transfer, 32)
+            .store_uint(op::jetton::transfer, 32)
             .store_uint(context::query_id, 64)
             .store_coins(amount)
             .store_slice(recipient)
@@ -77,7 +77,7 @@ global int context::query_id;
 
     load_data();
 
-    if (context::op == 0) {
+    if (context::op == op::deploy) {
         throw_unless(error::already_deployed, data::jetton_wallet.preload_uint(2) == 0);
         data::jetton_wallet = in_msg_body~load_msg_addr();
         save_data();
@@ -96,7 +96,7 @@ global int context::query_id;
         (slice entry, int found?) = dict.udict_get?(256, index);
         throw_unless(45, found?);
 
-        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(entry, proof_cell.cell_hash(), index))));
+        throw_unless(error::wrong_sender, equal_slices(context::sender, helper_address(helper_stateinit(proof_cell.cell_hash(), index))));
 
         send_tokens(entry~load_msg_addr(), entry~load_coins());
     }

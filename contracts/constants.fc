@@ -1,5 +1,6 @@
+const int op::deploy = 0x610ca46c;
 const int op::process_claim = 0x43c7d5c9;
-const int op::transfer = 0x0f8a7ea5;
+const int op::jetton::transfer = 0x0f8a7ea5;
 
 const int error::already_claimed = 702;
 const int error::wrong_sender = 703;

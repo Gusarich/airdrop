@@ -5,6 +5,8 @@ claimed$1 = AirdropHelperStorage;
 
 _ address:MsgAddressInt amount:Coins = AirdropEntry;
 
+deploy#610ca46c jetton_wallet:MsgAddressInt = InternalMsgBody;
+
 claim#_ query_id:uint64 proof:^(MerkleProof (HashmapE 256 AirdropEntry)) = ExternalMsgBody;
 
 process_claim#43c7d5c9 query_id:uint64 proof:^(MerkleProof (HashmapE 256 AirdropEntry)) index:uint256 = InternalMsgBody;

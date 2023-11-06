@@ -70,7 +70,7 @@ export class Airdrop implements Contract {
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().storeUint(0, 96).storeAddress(jettonWallet).endCell(),
+            body: beginCell().storeUint(0x610ca46c, 32).storeUint(0, 64).storeAddress(jettonWallet).endCell(),
         });
     }
 }
